@@ -7,12 +7,13 @@ public class ThirdPersonCamera : MonoBehaviour {
     public float zoomSpeed = 5.0f;
     public float rotationSpeed = 180.0f;
 
-    private float distance = 10.0f;
-    private Vector3 direction = new Vector3( 0.0f, 1.0f, -1.0f );
+    private float distance = 15.0f;
+    private Vector3 direction = Vector3.zero;
     
 	// Use this for initialization
 	void Start ()
     {
+        direction = character.transform.TransformDirection( new Vector3( 0.0f, 1.0f, -1.0f ) );
         direction.Normalize();
 	}
 	
@@ -36,6 +37,8 @@ public class ThirdPersonCamera : MonoBehaviour {
         distance -= zoomSpeed * Input.GetAxis( "Mouse ScrollWheel" );
 
         transform.position = character.transform.position + direction * distance;
-        transform.LookAt( character.transform );
+        // We want to look at the middle of character, not its feet.
+        Vector3 lookAtTarget = character.transform.position + Vector3.up * 1.5f;
+        transform.LookAt( lookAtTarget );
 	}
 }
