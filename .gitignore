@@ -3,6 +3,11 @@
 #################
 
 Library/
+Temp/
+obj/
+*.unityproj
+*.csproj
+*.sln
 
 #################
 ## Eclipse
