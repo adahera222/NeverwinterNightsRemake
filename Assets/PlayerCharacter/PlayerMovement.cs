@@ -2,13 +2,15 @@ using UnityEngine;
 using System.Collections;
 
 [RequireComponent( typeof( CharacterController ) )]
+[RequireComponent( typeof( Animation ) )]
 
 public class PlayerMovement : MonoBehaviour
 {
     // Collider which we are interested in during casting ray.
     public Collider terrainCollider;
 
-    public float speed = 10.0f;
+    public float walkSpeed = 3.0f;
+    public float runSpeed = 10.0f;
     public float jumpSpeed = 20.0f;
     public float rotationSpeed = 180.0f;
     public float gravity = 60.0f;
@@ -16,6 +18,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 jumpDirection = Vector3.zero;
     private Vector3 clickPoint = Vector3.zero;
     private bool clickMovement = false;
+    private bool isRunning = true;
 
     // Use this for initialization
     void Start()
@@ -26,6 +29,15 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         CharacterController controller = GetComponent<CharacterController>();
+        Animation animation = GetComponent<Animation>();
+        float vertAxis = Input.GetAxis( "Vertical" );
+        float horizAxis = Input.GetAxis( "Horizontal" );
+
+        // Run/Walk switch.
+        if ( Input.GetButtonDown( "RunWalk Switch" ) )
+        {
+            isRunning = !isRunning;
+        }
 
         // Move to click.
         if ( Input.GetButtonDown( "Fire1" ) )
@@ -44,11 +56,10 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // Rotation of character.
-        Vector3 rotation = Vector3.up;
-        rotation *= Input.GetAxis( "Horizontal" ) * rotationSpeed;
-        rotation *= Time.deltaTime;
-        if ( rotation != Vector3.zero )
+        if ( horizAxis != 0.0f )
         {
+            Vector3 rotation = new Vector3( 0.0f, horizAxis, 0.0f );
+            rotation *= rotationSpeed * Time.deltaTime;
             transform.Rotate( rotation );
             // We don't want move to clickPoint anymore.
             clickMovement = false;
@@ -56,10 +67,18 @@ public class PlayerMovement : MonoBehaviour
         
         // Movement of character.
         // Forward/backward movement.
-        Vector3 moveDirection = transform.TransformDirection( Vector3.forward );
-        moveDirection *= Input.GetAxis( "Vertical" ) * speed * Time.deltaTime;
-        if ( moveDirection != Vector3.zero )
+        if ( vertAxis != 0.0f )
         {
+            Vector3 moveDirection = transform.TransformDirection( Vector3.forward );
+            moveDirection *= vertAxis * Time.deltaTime;
+            if ( isRunning )
+            {
+                moveDirection *= runSpeed;
+            }
+            else
+            {
+                moveDirection *= walkSpeed;
+            }
             controller.Move( moveDirection );
             // We don't want move to clickPoint anymore.
             clickMovement = false;
@@ -76,7 +95,15 @@ public class PlayerMovement : MonoBehaviour
             transform.rotation = newRotation;
 
             // Compute move vector for this frame.
-            Vector3 clickMove = transform.TransformDirection( Vector3.forward ) * speed * Time.deltaTime;
+            Vector3 clickMove = transform.TransformDirection( Vector3.forward ) * Time.deltaTime;
+            if ( isRunning )
+            {
+                clickMove *= runSpeed;
+            }
+            else
+            {
+                clickMove *= walkSpeed;
+            }
             Vector3 toTarget = clickPoint - transform.position;
             toTarget.y = 0.0f;
             if ( clickMove.magnitude > toTarget.magnitude )
@@ -97,5 +124,21 @@ public class PlayerMovement : MonoBehaviour
             jumpDirection.y -= gravity * Time.deltaTime;
         }
         controller.Move( jumpDirection * Time.deltaTime );
+
+        if ( vertAxis != 0.0f || horizAxis != 0.0f )
+        {
+            if ( isRunning )
+            {
+                animation.Play( "run" );
+            }
+            else
+            {
+                animation.Play( "walk" );
+            }
+        }
+        else
+        {
+            animation.Play( "idle" );
+        }
     }
 }
