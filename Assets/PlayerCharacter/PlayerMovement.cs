@@ -125,7 +125,7 @@ public class PlayerMovement : MonoBehaviour
         }
         controller.Move( jumpDirection * Time.deltaTime );
 
-        if ( vertAxis != 0.0f || horizAxis != 0.0f )
+        if ( vertAxis != 0.0f || horizAxis != 0.0f || clickMovement )
         {
             if ( isRunning )
             {

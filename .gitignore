@@ -8,6 +8,8 @@ obj/
 *.unityproj
 *.csproj
 *.sln
+*.pidb
+*.userprefs
 
 #################
 ## Eclipse

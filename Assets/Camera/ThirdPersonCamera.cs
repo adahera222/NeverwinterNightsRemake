@@ -8,11 +8,12 @@ public class ThirdPersonCamera : MonoBehaviour {
     public float rotationSpeed = 180.0f;
 
     private float distance = 10.0f;
-    private Vector3 direction = new Vector3( 0.0f, 1.0f, -1.0f );
+    private Vector3 direction;
     
 	// Use this for initialization
 	void Start ()
     {
+        direction = character.transform.TransformDirection( 0.0f, 1.0f, -1.0f );
         direction.Normalize();
 	}
 	
