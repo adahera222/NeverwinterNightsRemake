@@ -5,6 +5,7 @@
 Library/
 Temp/
 obj/
+bin/
 *.unityproj
 *.csproj
 *.sln

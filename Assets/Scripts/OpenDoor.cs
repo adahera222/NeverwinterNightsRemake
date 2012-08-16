@@ -4,6 +4,7 @@ using System.Collections;
 public class OpenDoor : MonoBehaviour {
 
     public string levelName;
+    public string loadingLevelName = "Loading Scene";
 
 	// Use this for initialization
 	void Start () {
@@ -17,7 +18,8 @@ public class OpenDoor : MonoBehaviour {
 
     void OnTriggerEnter()
     {
-        Application.LoadLevel( levelName );
+        LoadLevel.levelName = levelName;
+        Application.LoadLevel( loadingLevelName );
     }
 
     void OnMouseEnter()
