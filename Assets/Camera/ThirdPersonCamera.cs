@@ -7,7 +7,7 @@ public class ThirdPersonCamera : MonoBehaviour {
     public float zoomSpeed = 5.0f;
     public float rotationSpeed = 180.0f;
 
-    private float distance = 10.0f;
+    private float distance = 15.0f;
     private Vector3 direction;
     
 	// Use this for initialization
