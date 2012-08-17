@@ -16,6 +16,7 @@ public class PlayerMovement : MonoBehaviour
     public float gravity = 60.0f;
 
     private Vector3 jumpDirection = Vector3.zero;
+    private bool isJumping = false;
     private Vector3 clickPoint = Vector3.zero;
     private bool clickMovement = false;
     private bool isRunning = true;
@@ -28,6 +29,8 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        Vector3 frameMoveDirection = Vector3.zero;
+
         CharacterController controller = GetComponent<CharacterController>();
         Animation animation = GetComponent<Animation>();
         float vertAxis = Input.GetAxis( "Vertical" );
@@ -79,7 +82,8 @@ public class PlayerMovement : MonoBehaviour
             {
                 moveDirection *= walkSpeed;
             }
-            controller.Move( moveDirection );
+            frameMoveDirection += moveDirection;
+            //controller.Move( moveDirection );
             // We don't want move to clickPoint anymore.
             clickMovement = false;
         }
@@ -111,20 +115,29 @@ public class PlayerMovement : MonoBehaviour
                 clickMove = toTarget;
                 clickMovement = false;
             }
-            controller.Move( clickMove );
+            frameMoveDirection += clickMove;
+            //controller.Move( clickMove );
         }
 
         // Jump + gravity.
-        if ( controller.isGrounded && Input.GetButton( "Jump" ) )
+        if ( isJumping && controller.isGrounded )
         {
+            isJumping = false;
+        }
+        if ( !isJumping && Input.GetButton( "Jump" ) )
+        {
+            isJumping = true;
             jumpDirection.y = jumpSpeed;
         }
         if ( !controller.isGrounded )
         {
             jumpDirection.y -= gravity * Time.deltaTime;
         }
-        controller.Move( jumpDirection * Time.deltaTime );
+        frameMoveDirection += jumpDirection * Time.deltaTime;
+        //controller.Move( jumpDirection * Time.deltaTime );
+        controller.Move( frameMoveDirection );
 
+        // Plays animation.
         if ( vertAxis != 0.0f || horizAxis != 0.0f || clickMovement )
         {
             if ( isRunning )
