@@ -6,9 +6,6 @@ using System.Collections;
 
 public class PlayerMovement : MonoBehaviour
 {
-    // Collider which we are interested in during casting ray.
-    public Collider terrainCollider;
-
     public float walkSpeed = 3.0f;
     public float runSpeed = 10.0f;
     public float jumpSpeed = 20.0f;
@@ -17,13 +14,15 @@ public class PlayerMovement : MonoBehaviour
 
     private Vector3 jumpDirection = Vector3.zero;
     private bool isJumping = false;
-    private Vector3 clickPoint = Vector3.zero;
     private bool clickMovement = false;
+    private NavMeshPath path;
+    private int actCorner = 0;
     private bool isRunning = true;
 
     // Use this for initialization
     void Start()
     {
+        path = new NavMeshPath();
     }
 
     // Update is called once per frame
@@ -46,16 +45,12 @@ public class PlayerMovement : MonoBehaviour
         if ( Input.GetButtonDown( "Fire1" ) )
         {
             Ray ray = Camera.main.ScreenPointToRay( Input.mousePosition );
-            RaycastHit[] hits = Physics.RaycastAll( ray );
-            foreach ( RaycastHit hit in hits )
-            {
-                if ( hit.collider == terrainCollider )
-                {
-                    clickMovement = true;
-                    clickPoint = hit.point;
-                    clickPoint.y = 0.0f;
-                }
-            }
+            RaycastHit hit;
+            Physics.Raycast( ray, out hit );
+            // Generate path to walk for character.
+            int passableMask = (1 << NavMesh.GetNavMeshLayerFromName( "Default" ) );
+            clickMovement = NavMesh.CalculatePath( transform.position, hit.point, passableMask, path );
+            actCorner = 0;
         }
 
         // Rotation of character.
@@ -83,7 +78,6 @@ public class PlayerMovement : MonoBehaviour
                 moveDirection *= walkSpeed;
             }
             frameMoveDirection += moveDirection;
-            //controller.Move( moveDirection );
             // We don't want move to clickPoint anymore.
             clickMovement = false;
         }
@@ -91,32 +85,39 @@ public class PlayerMovement : MonoBehaviour
         // There was none of WSAD down.
         if ( clickMovement )
         {
-            // Rotate in direction of click point.
-            Vector3 relativePos = clickPoint - transform.position;
-            // We don't want to take into account Y-difference.
-            relativePos.y = 0;
-            Quaternion newRotation = Quaternion.LookRotation( relativePos );
-            transform.rotation = newRotation;
-
-            // Compute move vector for this frame.
-            Vector3 clickMove = transform.TransformDirection( Vector3.forward ) * Time.deltaTime;
-            if ( isRunning )
+            if ( actCorner < path.corners.Length )
             {
-                clickMove *= runSpeed;
+                // Rotate in direction of click point.
+                Vector3 relativePos = path.corners[actCorner] - transform.position;
+                // We don't want to take into account Y-difference during rotation.
+                relativePos.y = 0.0f;
+                if ( relativePos != Vector3.zero )
+                {
+                    Quaternion newRotation = Quaternion.LookRotation( relativePos );
+                    transform.rotation = newRotation;
+                }
+
+                // Compute move vector for this frame.
+                Vector3 clickMove = transform.TransformDirection( Vector3.forward ) * Time.deltaTime;
+                if ( isRunning )
+                {
+                    clickMove *= runSpeed;
+                }
+                else
+                {
+                    clickMove *= walkSpeed;
+                }
+                if ( clickMove.magnitude > relativePos.magnitude )
+                {
+                    clickMove = relativePos;
+                    ++actCorner;
+                }
+                frameMoveDirection += clickMove;
             }
             else
             {
-                clickMove *= walkSpeed;
-            }
-            Vector3 toTarget = clickPoint - transform.position;
-            toTarget.y = 0.0f;
-            if ( clickMove.magnitude > toTarget.magnitude )
-            {
-                clickMove = toTarget;
                 clickMovement = false;
             }
-            frameMoveDirection += clickMove;
-            //controller.Move( clickMove );
         }
 
         // Jump + gravity.
@@ -134,7 +135,8 @@ public class PlayerMovement : MonoBehaviour
             jumpDirection.y -= gravity * Time.deltaTime;
         }
         frameMoveDirection += jumpDirection * Time.deltaTime;
-        //controller.Move( jumpDirection * Time.deltaTime );
+        
+        // Move character at last.
         controller.Move( frameMoveDirection );
 
         // Plays animation.
